@@ -1,5 +1,3 @@
-# Solid-State-Physics
-Simulation
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -29,7 +27,7 @@ Simulation
                 <p class="text-gray-500 text-xs md:text-sm">Visualize solid-state physics structures using primitive vectors</p>
             </div>
             <div class="hidden md:block text-right text-[10px] text-gray-400 font-mono">
-                v2.2: Vector Labels Added
+                v2.3: Conventional Unit Cell
             </div>
         </div>
 
@@ -152,7 +150,7 @@ Simulation
             canvas.height = 128;
             const ctx = canvas.getContext('2d');
             ctx.fillStyle = color;
-            ctx.font = 'bold 70px sans-serif'; // Reduced slightly to handle subscripts cleanly
+            ctx.font = 'bold 70px sans-serif'; 
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(text, 64, 64);
@@ -266,26 +264,33 @@ Simulation
 
             // Primitive Vectors (Cyan, Fuchsia, Amber)
             const vectorColorsHex = [0x06b6d4, 0xd946ef, 0xf59e0b];
-            const vectorColorsStr = ['#06b6d4', '#d946ef', '#f59e0b']; // Hex strings for Canvas
+            const vectorColorsStr = ['#06b6d4', '#d946ef', '#f59e0b']; 
             const vectorLabelsText = ['a₁', 'a₂', 'a₃'];
 
             vectors.forEach((v, i) => {
-                // Draw Arrow
                 const arrow = new THREE.ArrowHelper(v.clone().normalize(), new THREE.Vector3(0,0,0), v.length(), vectorColorsHex[i], 0.4, 0.2);
                 vectorsGroup.add(arrow);
 
-                // Add 3D Text Label
                 const labelSprite = createTextSprite(vectorLabelsText[i], vectorColorsStr[i], 1.2);
-                // Position the label just past the tip of the vector
                 labelSprite.position.copy(v).multiplyScalar(1.25);
                 vectorsGroup.add(labelSprite);
             });
 
-            // Grid Box for context
-            const boxSize = a * 2;
+            // --- CONVENTIONAL UNIT CELL GRID BOX ---
+            // Create a box of size exactly 'a' (the lattice constant)
+            const boxSize = a;
             const boxGeom = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
+            
+            // Translate the geometry so that its bottom-left-back corner sits exactly at (0,0,0)
+            // This perfectly aligns the box boundaries with the atoms for SC, BCC, and FCC
+            boxGeom.translate(boxSize / 2, boxSize / 2, boxSize / 2);
+            
             const edges = new THREE.EdgesGeometry(boxGeom);
-            const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x9ca3af, transparent: true, opacity: 0.3 }));
+            const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ 
+                color: 0x334155, // Dark slate gray for better visibility
+                transparent: true, 
+                opacity: 0.6 
+            }));
             gridGroup.add(line);
 
             // UI Update
@@ -294,7 +299,6 @@ Simulation
             document.getElementById('extent-value').innerText = extent;
             document.getElementById('size-value').innerText = atomRadius.toFixed(2);
             document.getElementById('vector-formula').innerHTML = lattice.formula.map((f, i) => {
-                // Tailwind color classes matching the 3D vectors
                 const textClasses = ['text-cyan-400', 'text-fuchsia-400', 'text-amber-400'];
                 return `<div class="bg-slate-800/50 p-1 px-2 rounded text-center ${textClasses[i]} font-bold">${f}</div>`;
             }).join('');
